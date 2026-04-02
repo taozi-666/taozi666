@@ -127,7 +127,7 @@
       formData.append('image', file);
 
       try {
-        const res = await fetch('http://127.0.0.1:3000/api/upload', {
+        const res = await fetch('https://taozi666-production.up.railway.app/api/upload', {
           method: 'POST',
           body: formData
         });
@@ -145,7 +145,7 @@
     async function save() {
       const content = document.getElementById('content').value;
       try {
-        const res = await fetch('http://127.0.0.1:3000/api/save', {
+        const res = await fetch('https://taozi666-production.up.railway.app/api/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token, content, media: imgUrl })
@@ -169,12 +169,12 @@
       }
       panel.style.display = 'block';
 
-      const baseUrl = `http://127.0.0.1:5500/view.html?id=${token}`;
+      const baseUrl = `https://meek-pastelito-c9d464.netlify.app/view.html?id=${token}`;
       document.getElementById('shareUrl').href = baseUrl;
       document.getElementById('shareUrl').textContent = baseUrl;
 
       try {
-        const res = await fetch('http://127.0.0.1:3000/api/qrcode', {
+        const res = await fetch('https://taozi666-production.up.railway.app/api/qrcode', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: baseUrl })
