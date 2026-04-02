@@ -59,7 +59,7 @@
     if (!id) {
       document.getElementById('content').textContent = '链接无效';
     } else {
-      fetch(`https://taozi666-production.up.railway.app/api/get/${id}`)
+      fetch(`http://139.180.152.16:3000/api/get/${id}`)
         .then(r => r.json())
         .then(result => {
           if (result.code === 200) {

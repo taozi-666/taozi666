@@ -127,7 +127,7 @@
       formData.append('image', file);
 
       try {
-        const res = await fetch('https://taozi666-production.up.railway.app/api/upload', {
+        const res = await fetch('http://139.180.152.16:3000/api/upload', {
           method: 'POST',
           body: formData
         });
@@ -145,7 +145,7 @@
     async function save() {
       const content = document.getElementById('content').value;
       try {
-        const res = await fetch('https://taozi666-production.up.railway.app/api/save', {
+        const res = await fetch('http://139.180.152.16:3000/api/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token, content, media: imgUrl })
@@ -174,7 +174,7 @@
       document.getElementById('shareUrl').textContent = baseUrl;
 
       try {
-        const res = await fetch('https://taozi666-production.up.railway.app/api/qrcode', {
+        const res = await fetch('http://139.180.152.16:3000/api/qrcode', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: baseUrl })
