@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>编辑生平 - 赛博生平记</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #333;
+    }
+    h2 { font-weight: 300; font-size: 1.4rem; margin-bottom: 1.5rem; }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+    }
+    textarea:focus { border-color: #333; }
+    .upload-area {
+      margin-top: 16px;
+      padding: 20px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .upload-area:hover { border-color: #333; }
+    .upload-area input { display: none; }
+    .upload-area span { color: #999; font-size: 0.9rem; }
+    #preview { margin-top: 16px; }
+    #preview img {
+      max-width: 100%;
+      border-radius: 8px;
+      display: block;
+    }
+    .btn-row {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+    }
+    button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .save { background: #111; color: #fff; }
+    .save:hover { background: #444; }
+    .share {
+      background: #fff;
+      color: #111;
+      border: 1px solid #ddd;
+    }
+    .share:hover { background: #f5f5f5; }
+
+    /* 分享面板 */
+    #sharePanel {
+      display: none;
+      margin-top: 32px;
+      padding: 24px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      text-align: center;
+    }
+    #sharePanel p { margin-bottom: 12px; font-size: 0.9rem; color: #666; }
+    #sharePanel a { color: #111; word-break: break-all; }
+    #sharePanel img { margin: 16px auto; max-width: 180px; }
+    #copyBtn {
+      margin-top: 12px;
+      padding: 10px 24px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>编辑生平</h2>
+
+  <textarea id="content" placeholder="写下你的一生..."></textarea>
+
+  <div class="upload-area" onclick="document.getElementById('imgInput').click()">
+    <input type="file" id="imgInput" accept="image/*" onchange="uploadImg(this)">
+    <span id="uploadHint">点击上传配图</span>
+  </div>
+
+  <div id="preview"></div>
+
+  <div class="btn-row">
+    <button class="save" onclick="save()">保存</button>
+    <button class="share" onclick="toggleShare()">分享</button>
+  </div>
+
+  <div id="sharePanel">
+    <p>扫码查看生平</p>
+    <img id="qrcode" src="" alt="二维码">
+    <p><a id="shareUrl" href="" target="_blank"></a></p>
+    <button id="copyBtn" onclick="copyLink()">复制链接</button>
+  </div>
+
+  <script>
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) { alert('缺少 token'); location.href = 'index.html'; }
+
+    let imgUrl = '';
+
+    async function uploadImg(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('http://127.0.0.1:3000/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          imgUrl = result.url;
+          document.getElementById('preview').innerHTML = `<img src="${imgUrl}" alt="预览">`;
+          document.getElementById('uploadHint').textContent = '已上传，点击更换';
+        }
+      } catch (err) {
+        alert('上传失败');
+      }
+    }
+
+    async function save() {
+      const content = document.getElementById('content').value;
+      try {
+        const res = await fetch('http://127.0.0.1:3000/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, content, media: imgUrl })
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          alert('保存成功');
+        } else {
+          alert(result.msg);
+        }
+      } catch (err) {
+        alert('保存失败');
+      }
+    }
+
+    async function toggleShare() {
+      const panel = document.getElementById('sharePanel');
+      if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+        return;
+      }
+      panel.style.display = 'block';
+
+      const baseUrl = `http://127.0.0.1:5500/view.html?id=${token}`;
+      document.getElementById('shareUrl').href = baseUrl;
+      document.getElementById('shareUrl').textContent = baseUrl;
+
+      try {
+        const res = await fetch('http://127.0.0.1:3000/api/qrcode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: baseUrl })
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          document.getElementById('qrcode').src = result.qrcode;
+        }
+      } catch (err) {
+        console.error('生成二维码失败');
+      }
+    }
+
+    async function copyLink() {
+      const url = document.getElementById('shareUrl').textContent;
+      try {
+        await navigator.clipboard.writeText(url);
+        document.getElementById('copyBtn').textContent = '已复制';
+        setTimeout(() => document.getElementById('copyBtn').textContent = '复制链接', 1500);
+      } catch (err) {
+        alert('复制失败');
+      }
+    }
+  </script>
+</body>
+</html>
