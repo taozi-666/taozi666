@@ -60,7 +60,7 @@ app.get('/api/get/:id', (req, res) => {
 // 上传图片
 app.post('/api/upload', upload.single('image'), (req, res) => {
   if (!req.file) return res.json({ code: 400, msg: '未上传文件' });
-  const url = `${BASE_URL}/uploads/${req.file.filename}`;
+  const url = `${BASE_URL.replace(':3000', '')}/uploads/${req.file.filename}`;
   res.json({ code: 200, url });
 });
 
